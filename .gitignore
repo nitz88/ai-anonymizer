@@ -9,4 +9,4 @@
 # Python cache
 *.py[cod]
 *$py.class
-mcp-server/models/__pycache__/*.pyc
+**/__pycache__/
