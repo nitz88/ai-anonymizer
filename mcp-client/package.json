@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start:ollama": "node dist/index.js --provider=ollama",
+    "start:llamacpp": "node dist/index.js --provider=llamacpp"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6"
+    "@types/express": "^5.0.6",
+    "typescript": "^6.0.3"
   }
 }

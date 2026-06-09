@@ -1,30 +1,41 @@
 import { createServer } from "./server.js";
 import { MCPClient } from "./services/mcp-client.js";
-import { OllamaClient } from "./services/ollama.js";
+import { OllamaClient } from "./services/ollama-client.js";
 import { ChatAgent } from "./agents/chat-agent.js";
 import { AnonymizeChatAgent } from "./agents/anonymize-chat.agent.js";
 import { createChatRouter } from "./routes/chat.js";
+import { LlamaCppProvider } from "./services/llama-cpp-client.js";
+
+export function createLLMClient() {
+    const args = process.argv.slice(2);
+    const providerArg = args.find(a => a.startsWith("--provider="));
+
+    const provider = providerArg?.split("=")[1] ?? process.env.LLM_PROVIDER ?? "";
+
+    console.log("provider", provider);
+    
+    switch (provider) {
+        case "ollama":
+            return new OllamaClient();
+
+        default:
+            return new LlamaCppProvider();
+    }
+}
 
 async function bootstrap() {
     const app = createServer();
     const mcpClient = new MCPClient();
+
     await mcpClient.connect();
 
     console.log("MCP connected");
-
-    const ollama = new OllamaClient();
-    const tools = await mcpClient.getOllamaTools();
-
-    // const agent = new ChatAgent(
-    //     mcpClient,
-    //     ollama,
-    //     tools
-    // );
-
+    
+    const llm = createLLMClient();
+   
     const agent = new AnonymizeChatAgent(
         mcpClient,
-        ollama,
-        tools
+        llm
     );
 
     app.use(

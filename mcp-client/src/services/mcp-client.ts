@@ -28,7 +28,14 @@ export class MCPClient {
     }
 
     public async listTools() {
-        return this.mcp.listTools();
+        if (this.toolCache) {
+            return this.toolCache;
+        }
+        const result = await this.mcp.listTools();
+
+        this.toolCache = result.tools;
+
+        return this.toolCache;
     }
 
     public async listPrompts() {
@@ -53,24 +60,4 @@ export class MCPClient {
         await this.transport.close();
     }
 
-    public async getOllamaTools() {
-        if (this.toolCache) {
-            return this.toolCache;
-        }
-
-        const result = await this.listTools();
-        
-
-        this.toolCache = result.tools.map(tool => ({
-            type: "function",
-            function: {
-                name: tool.name,
-                description: tool.description,
-                parameters: tool.inputSchema
-            }
-        }));
-
-
-        return this.toolCache;
-    }
 }

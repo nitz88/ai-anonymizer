@@ -1,23 +1,24 @@
+import { ChatMessage, LLMProvider } from "../models/models.js";
 import { MCPClient } from "../services/mcp-client.js";
-import { OllamaClient } from "../services/ollama.js";
+import { OllamaClient } from "../services/ollama-client.js";
 
 export class ChatAgent {
     constructor(
         private readonly mcp: MCPClient,
-        private readonly ollama: OllamaClient,
+        private readonly llmProvider: LLMProvider,
         private readonly tools: any[]
     ) {}
 
     async chat(userMessage: string) {
         
-        const messages = [
+        const messages: ChatMessage[] = [
             {
                 role: "user",
                 content: userMessage
             }
         ];
 
-        const response = await this.ollama.chat(
+        const response = await this.llmProvider.chat(
             messages,
             this.tools
         );
@@ -48,7 +49,7 @@ export class ChatAgent {
                     content: JSON.stringify(toolText)
                 });
             }
-            return await this.ollama.chat(
+            return await this.llmProvider.chat(
                 messages,
                 this.tools
             );

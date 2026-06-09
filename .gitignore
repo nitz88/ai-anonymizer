@@ -1,0 +1,12 @@
+# server folders
+/mcp-server/.venv
+/mcp-server/uv.lock
+
+# client folders
+/mcp-client/dist
+/mcp-client/node_modules
+
+# Python cache
+*.py[cod]
+*$py.class
+mcp-server/models/__pycache__/*.pyc
