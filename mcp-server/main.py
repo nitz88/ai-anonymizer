@@ -51,6 +51,7 @@ def anonymize_text(
             for entity in result.entities
         ],
         "sessionId": result.session_id,
+        "hasPii": result.hasPii
     }
 
 

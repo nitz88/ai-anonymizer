@@ -131,6 +131,7 @@ class Anonymizer:
         self,
         text: str,
         session_id: str | None = None,
+        hasPii: bool = False
     ) -> AnonymizeResult:
         
         session_id = (
@@ -231,4 +232,5 @@ class Anonymizer:
             anonymized_text=result,
             entities=entities,
             session_id=session_id,
+            hasPii=len(entities) > 0
         )

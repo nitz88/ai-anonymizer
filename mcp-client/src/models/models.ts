@@ -22,3 +22,19 @@ export interface LLMProvider {
         tools?: any[]
     ): Promise<any>;
 }
+
+export interface ChatResult {
+    type: "text";
+    text: string;
+    anonymized?: boolean;
+}
+
+export interface MCPTextContent {
+    type: "text";
+    text: string;
+}
+
+export interface MCPToolResponse {
+    content: MCPTextContent[];
+    isError?: boolean;
+}

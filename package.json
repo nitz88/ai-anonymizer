@@ -8,7 +8,8 @@
     "build:client": "cd mcp-client && npm run build",
     "run:client": "cd mcp-client && npm run start",
     "run:server": "cd mcp-server && uv run --with mcp main.py",
-    "build": "npx npm-run-all build:server build:client"
+    "build": "npx npm-run-all build:server build:client",
+    "start": "npx npm-run-all --parallel run:server run:client"
   },
   "repository": {
     "type": "git",

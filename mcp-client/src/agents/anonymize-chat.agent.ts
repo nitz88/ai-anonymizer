@@ -1,6 +1,5 @@
-import { ChatMessage, LLMProvider } from "../models/models.js";
+import { ChatMessage, LLMProvider, MCPToolResponse } from "../models/models.js";
 import { MCPClient } from "../services/mcp-client.js";
-import { OllamaClient } from "../services/ollama-client.js";
 
 export class AnonymizeChatAgent {
     constructor(
@@ -22,37 +21,50 @@ export class AnonymizeChatAgent {
         const anonymized = this.extractToolResult(anonymizedRaw);
 
         console.log("Anonymized message:", anonymized);
+        let messages: ChatMessage[] = [];
+        
+        if (anonymized.hasPii) {
+            const promptResult =
+                await this.mcp.getPrompt(
+                    "anonymize_before_send",
+                    {
+                        session_id:
+                            anonymized.sessionId
+                    }
+                );
 
-        const promptResult =
-            await this.mcp.getPrompt(
-                "anonymize_before_send",
+            const promptText = promptResult.messages
+                .filter(
+                    m => m.content.type === "text"
+                )
+                .map(
+                    m => m.content.type === "text"
+                        ? m.content.text
+                        : ""
+                )
+                .join("\n");
+
+            messages = [
                 {
-                    session_id:
-                        anonymized.sessionId
+                    role: "system",
+                    content: promptText
+                },
+                {
+                    role: "user",
+                    content: anonymized.anonymizedText
                 }
-            );
+            ];
+        } else {
+            messages = [
+                {
+                    role: "user",
+                    content: userMessage
+                }
+            ]
+        }
 
-        const promptText = promptResult.messages
-            .filter(
-                m => m.content.type === "text"
-            )
-            .map(
-                m => m.content.type === "text"
-                    ? m.content.text
-                    : ""
-            )
-            .join("\n");
-
-        const messages: ChatMessage[] = [
-            {
-                role: "system",
-                content: promptText
-            },
-            {
-                role: "user",
-                content: anonymized.anonymizedText
-            }
-        ];
+        console.log("Prompt message which is sent to LLM");
+        console.dir(messages);
 
         const response = await this.llmProvider.chat(
             messages
@@ -61,18 +73,30 @@ export class AnonymizeChatAgent {
         console.log("chat service response:");
         console.dir(response, { depth: null });
 
-        const restoredRaw =
-            await this.mcp.callTool(
-                "deanonymize_text",
-                {
-                    text:
-                        response.content,
+        if (anonymized.hasPii) {
+            const restoredRaw =
+                await this.mcp.callTool(
+                    "deanonymize_text",
+                    {
+                        text:
+                            response.content,
 
-                    session_id:
-                        anonymized.sessionId
-                }
-            );
-        
-        return restoredRaw;
+                        session_id:
+                            anonymized.sessionId
+                    }
+                );
+            const restored = restoredRaw as MCPToolResponse;
+            return {
+                type: "text",
+                text:  restored.content[0]?.text ?? "",
+                anonymized: true
+            }
+        } else {
+            return {
+                type: "text",
+                text: response.content,
+                anonymized: false
+            };
+        }
     }
 }

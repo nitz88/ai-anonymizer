@@ -18,3 +18,4 @@ class AnonymizeResult:
     anonymized_text: str
     entities: list[DetectedEntity]
     session_id: str
+    hasPii: bool

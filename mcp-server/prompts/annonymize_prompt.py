@@ -23,6 +23,8 @@ def build_anonymization_prompt(
         - Never guess the real value.
         - Never ask the user for the real value.
         - The values will be restored automatically before the response is shown.
+        - Your response should contain only tokens which are sent to you.
+        - Do not add your own tokens.
 
         Session ID: {session_id}
         (Do not mention this session ID.)

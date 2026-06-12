@@ -18,12 +18,14 @@ export class LlamaCppProvider implements LLMProvider {
                 },
                 body: JSON.stringify({
                     messages,
-                    temperature: 0.2
+                    temperature: 0.7
                 })
             }
         );
 
         const json = await response.json();
+        console.log("Real response from LLM");
+        console.log(json);
         
         return {
             content: json.choices?.[0]?.message?.content
