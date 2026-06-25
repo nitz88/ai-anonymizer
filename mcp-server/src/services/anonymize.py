@@ -1,4 +1,11 @@
 from dataclasses import dataclass
+from presidio_analyzer import AnalyzerEngine
+from presidio_analyzer.nlp_engine import NlpEngineProvider
+from models.entities import EntityType
+from typing import List
+from services.session_store import SessionStore
+from mcp.server.fastmcp import FastMCP
+
 import re
 
 from models.entities import (
@@ -7,19 +14,9 @@ from models.entities import (
     EntityType,
 )
 
-from patterns.pii_patterns import (
-    EMAIL_PATTERN,
-    NAME_FORMAL_PATTERN,
-    NAME_CONTEXT_PATTERN,
-    AGE_PATTERN,
-)
-
-from services.session_store import SessionStore
-
-
 @dataclass
 class RawMatch:
-    type: EntityType
+    type: str
     value: str
     index: int
     stored_value: str | None = None
@@ -29,101 +26,76 @@ class Anonymizer:
 
     def __init__(self, store: SessionStore):
         self.store = store
+        configuration = {
+            "nlp_engine_name": "spacy",
+            "models": [
+                {
+                    "lang_code": "en",
+                    "model_name": "en_core_web_lg"
+                }
+            ]
+        }
 
-    def _detect_entities(
-        self,
-        text: str,
-    ) -> list[RawMatch]:
+        provider = NlpEngineProvider(
+            nlp_configuration=configuration
+        )
+
+        nlp_engine = provider.create_engine()
+
+        self.analyzer = AnalyzerEngine(
+            nlp_engine=nlp_engine
+        )
+
+    
+
+    def _detect_entities(self, text: str) -> list[RawMatch]:
+
+        results = self.analyzer.analyze(
+            text=text,
+            language="en"
+        )
 
         matches: list[RawMatch] = []
 
-        # EMAIL
+        entity_map = {
+            "PERSON": "NAME",
+            "EMAIL_ADDRESS": "EMAIL",
+            "PHONE_NUMBER": "PHONE",
+            "CREDIT_CARD": "CREDIT_CARD",
+            "LOCATION": "LOCATION",
+            "AGE": "AGE"
+        }
 
-        for match in EMAIL_PATTERN.finditer(text):
-            matches.append(
-                RawMatch(
-                    type="EMAIL",
-                    value=match.group(0),
-                    stored_value=match.group(0),
-                    index=match.start(),
-                )
-            )
+        for r in results:
 
-        # FORMAL NAME
+            entity_type = entity_map.get(r.entity_type)
 
-        for match in NAME_FORMAL_PATTERN.finditer(text):
-            value = match.group(0).strip()
-
-            matches.append(
-                RawMatch(
-                    type="NAME",
-                    value=value,
-                    stored_value=value,
-                    index=match.start(),
-                )
-            )
-
-        # CONTEXT NAME
-
-        for match in NAME_CONTEXT_PATTERN.finditer(text):
-
-            name_word = match.group(1)
-
-            name_index = (
-                match.start()
-                + match.group(0).rfind(name_word)
-            )
-
-            matches.append(
-                RawMatch(
-                    type="NAME",
-                    value=name_word,
-                    stored_value=name_word,
-                    index=name_index,
-                )
-            )
-
-        # AGE
-
-        for match in AGE_PATTERN.finditer(text):
-
-            numeric_age = (
-                match.groupdict().get("num1")
-                or match.groupdict().get("num2")
-            )
-
-            if not numeric_age:
+            if entity_type is None:
                 continue
 
-            age_start = (
-                match.start() +
-                match.group(0).find(numeric_age)
-            )
+            value = text[r.start:r.end]
 
             matches.append(
                 RawMatch(
-                    type="AGE",
-                    value=numeric_age,
-                    stored_value=numeric_age,
-                    index=age_start,
+                    type=entity_type,
+                    value=value,
+                    stored_value=value,
+                    index=r.start,
                 )
             )
 
         matches.sort(key=lambda x: x.index)
 
         deduped: list[RawMatch] = []
-
         last_end = -1
 
-        for item in matches:
+        for m in matches:
 
-            current_end = (
-                item.index + len(item.value)
-            )
+            end = m.index + len(m.value)
 
-            if item.index >= last_end:
-                deduped.append(item)
-                last_end = current_end
+            if m.index >= last_end:
+                deduped.append(m)
+                last_end = end
 
         return deduped
 
@@ -146,12 +118,16 @@ class Anonymizer:
         reverse_map: dict[str, str] = {}
 
         for token, value in token_map.items():
-            reverse_map[value.lower()] = token
+            key = value.strip().lower()
+            reverse_map[key] = token
 
         counters = {
             "NAME": 0,
             "AGE": 0,
             "EMAIL": 0,
+            "PHONE": 0,
+            "LOCATION": 0,
+            "CREDIT_CARD": 0
         }
 
         token_pattern = re.compile(
@@ -189,6 +165,9 @@ class Anonymizer:
                 token = reverse_map[normalized]
 
             else:
+
+                if match.type not in counters:
+                    counters[match.type] = 0
 
                 counters[match.type] += 1
 

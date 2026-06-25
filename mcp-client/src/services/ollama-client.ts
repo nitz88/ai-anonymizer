@@ -3,7 +3,7 @@ import { LLMProvider, ChatMessage } from "../models/models.js";
 
 export class OllamaClient implements LLMProvider {
     constructor(
-        private readonly model = "gemma4:latest"
+        private readonly model = "qwen2.5-coder:3b"
     ) {
         console.log("Using ollama provider");
     }

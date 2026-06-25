@@ -5,19 +5,14 @@ def build_anonymization_prompt(
 
     base = f"""
         You are a helpful assistant.
-
         The user's message has been anonymized before being sent to you.
-
         Tokens such as:
-
         [NAME_1]
         [EMAIL_1]
         [AGE_1]
-
         represent real values that have been hidden.
 
         Rules:
-
         - Treat every token as a valid real value.
         - Use tokens naturally in responses.
         - Never guess the real value.

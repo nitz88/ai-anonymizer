@@ -1,0 +1,18 @@
+[
+  {
+    "id": "TC001",
+    "input": "My name is John Doe and my email is john.doe@example.com"
+  },
+  {
+    "id": "TC002",
+    "input": "Call me at 9876543210 tomorrow."
+  },
+  {
+    "id": "TC003",
+    "input": "Alice Smith lives in Bangalore."
+  },
+  {
+    "id": "TC004",
+    "input": "This sentence contains no PII."
+  }
+]

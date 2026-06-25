@@ -1,7 +1,14 @@
 from dataclasses import dataclass
 from typing import Literal
 
-EntityType = Literal["NAME", "AGE", "EMAIL"]
+EntityType = Literal[
+    "NAME",
+    "AGE",
+    "EMAIL",
+    "PHONE",
+    "LOCATION",
+    "CREDIT_CARD"
+]
 
 
 @dataclass

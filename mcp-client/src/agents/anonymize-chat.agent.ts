@@ -8,9 +8,23 @@ export class AnonymizeChatAgent {
     ) {}
 
     private extractToolResult(result: any) {
-        const text = result.content?.[0]?.text;
+        try {
 
-        return JSON.parse(text);
+            if (!result.isError) {
+                const text = result.content?.[0]?.text;
+
+                return JSON.parse(text);
+            } else {
+                console.error("We have got error while passing result");
+                return null;
+            }
+            
+        } catch (error) {
+            console.error("We have got error while passing result");
+            console.error(error);
+            return null;
+        }
+        
     }
 
     async chat(userMessage: string) {
@@ -18,12 +32,15 @@ export class AnonymizeChatAgent {
             text: userMessage
         });
 
+        console.log("Received text from anonymize_text tool");
+        console.log(anonymizedRaw);
+
         const anonymized = this.extractToolResult(anonymizedRaw);
 
         console.log("Anonymized message:", anonymized);
         let messages: ChatMessage[] = [];
         
-        if (anonymized.hasPii) {
+        if (anonymized && anonymized.hasPii) {
             const promptResult =
                 await this.mcp.getPrompt(
                     "anonymize_before_send",

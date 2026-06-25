@@ -2,14 +2,15 @@
   "name": "ai-anonymizer",
   "version": "1.0.0",
   "description": "\"# ai-anonymizer\"",
-  "main": "index.js",
   "scripts": {
     "build:server": "cd mcp-server && uv sync",
     "build:client": "cd mcp-client && npm run build",
-    "run:client": "cd mcp-client && npm run start",
-    "run:server": "cd mcp-server && uv run --with mcp main.py",
+    "start:client": "cd mcp-client && npm run start",
+    "start:mcp-server-remote": "cd mcp-server && npm run mcp:remote",
+    "start:mcp-server-local": "cd mcp-server && npm run mcp:local",
+    "inspect-server": "cd mcp-server && npm run inspect",
     "build": "npx npm-run-all build:server build:client",
-    "start": "npx npm-run-all --parallel run:server run:client"
+    "start": "npx npm-run-all --parallel start:mcp-server-local start:client"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/nitz88/ai-anonymizer/issues"
   },

@@ -1,0 +1,9 @@
+{
+  "name": "mcp-server",
+  "scripts": {
+    "mcp:local": "uv run --with mcp src/run_stdio.py",
+    "mcp:remote": "uv run --with mcp src/run_http.py",
+    "test": "uv run --with mcp test-suite/run_tests.py",
+    "inspect": "npx @modelcontextprotocol/inspector uv run --with mcp src/run_stdio.py"
+  }
+}
